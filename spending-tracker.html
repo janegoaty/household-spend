@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Household Spending</title>
+    <style>
+        :root {
+            --primary-dark: #313d4b;
+            --bg-color: #f4f2ee;
+            --text-muted: #8b8f8e;
+            --border-color: #dcdad5;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            background-color: var(--primary-dark);
+            color: white;
+            width: 100%;
+            padding: 40px 20px 80px 20px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .header h1 {
+            font-family: Georgia, serif; /* Matches your elegant serif title */
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            letter-spacing: 0.5px;
+        }
+
+        .header p {
+            color: #aeb5be;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .card {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 16px;
+            padding: 30px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-top: -50px;
+            box-sizing: border-box;
+            margin-bottom: 40px;
+        }
+
+        .date-pill {
+            background-color: #eef0f3;
+            color: var(--primary-dark);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        input[type="text"], input[type="number"], input[type="password"] {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
+            background-color: #faf9f7;
+        }
+
+        input:focus {
+            border-color: var(--primary-dark);
+        }
+
+        /* Entered By Toggle Buttons */
+        .toggle-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background-color: transparent;
+            color: var(--text-muted);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+            background-color: #eef0f3;
+            color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background-color: var(--primary-dark);
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: opacity 0.2s;
+        }
+
+        .submit-btn:active {
+            opacity: 0.8;
+        }
+        
+        .amount-wrapper {
+            position: relative;
+        }
+        
+        .amount-wrapper::before {
+            content: "$";
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+        
+        .amount-wrapper input {
+            padding-left: 30px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Household Spending</h1>
+        <p id="headerDate">Loading date...</p>
+    </div>
+
+    <div class="card">
+        <div class="date-pill" id="pillDate">Loading date...</div>
+
+        <form id="spendingForm">
+            <div class="form-group">
+                <label>What / Where</label>
+                <input type="text" id="description" required>
+            </div>
+
+            <div class="form-group">
+                <label>Amount (SGD)</label>
+                <div class="amount-wrapper">
+                    <input type="number" id="amount" step="0.01" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Credit Card</label>
+                <input type="text" id="card">
+            </div>
+
+            <div class="form-group">
+                <label>Entered By</label>
+                <div class="toggle-group">
+                    <button type="button" class="toggle-btn active" onclick="setEnteredBy('SM', this)">SM</button>
+                    <button type="button" class="toggle-btn" onclick="setEnteredBy('MA', this)">MA</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Security PIN</label>
+                <input type="password" id="pin" inputmode="numeric" maxlength="6" placeholder="••••••" required>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">Log Spending</button>
+        </form>
+    </div>
+
+    <script>
+        // Set today's date in the UI
+        const today = new Date();
+        const optionsHeader = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+        const optionsPill = { day: 'numeric', month: 'long', year: 'numeric' };
+        
+        document.getElementById('headerDate').textContent = today.toLocaleDateString('en-GB', optionsHeader);
+        document.getElementById('pillDate').textContent = today.toLocaleDateString('en-GB', optionsPill);
+
+        // Variables for our payload
+        let selectedUser = 'SM'; // Default
+        const currentMonth = today.toLocaleString('default', { month: 'long' });
+        const currentDate = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+        // Handle Toggle Buttons
+        function setEnteredBy(user, btnElement) {
+            selectedUser = user;
+            // Remove active class from all buttons
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            // Add active class to clicked button
+            btnElement.classList.add('active');
+        }
+
+        // Handle Form Submission
+        document.getElementById('spendingForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent page reload
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.textContent = 'Logging...';
+            submitBtn.disabled = true;
+
+            const payload = {
+                pin: document.getElementById('pin').value,
+                month: currentMonth,
+                date: currentDate,
+                description: document.getElementById('description').value,
+                amount: document.getElementById('amount').value,
+                card: document.getElementById('card').value || "N/A",
+                enteredBy: selectedUser
+            };
+
+            // REPLACE THIS URL WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
+            const GOOGLE_SCRIPT_URL = "YOUR_WEB_APP_URL_HERE";
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.text())
+            .then(data => {
+                if(data === "Unauthorized") {
+                    alert("Incorrect PIN. Please try again.");
+                } else {
+                    alert("Expense Logged Successfully!");
+                    document.getElementById('spendingForm').reset(); // Clear form
+                }
+            })
+            .catch(error => {
+                alert("Error logging expense. Check your connection.");
+                console.error(error);
+            })
+            .finally(() => {
+                submitBtn.textContent = 'Log Spending';
+                submitBtn.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>
