@@ -81,7 +81,6 @@
 </head>
 <body>
 
-    <!-- Confirmation Modal -->
     <div id="confirmModal" class="modal-overlay" style="display:none">
         <div class="modal">
             <h3 class="modal-title">Confirm Spending</h3>
@@ -109,10 +108,8 @@
 
         <form id="spendingForm">
 
-            <!-- Dynamic item blocks -->
             <div id="itemsContainer"></div>
 
-            <!-- Add item button -->
             <button type="button" class="add-item-btn" id="addItemBtn">+ Add Another Item</button>
 
             <hr class="divider">
@@ -144,7 +141,11 @@
         const currentMonth = today.toLocaleString('default', { month: 'long' }) + today.getFullYear();
         const currentDate = today.toISOString().split('T')[0];
 
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxRXm8gopGYWYy2C-pJMnhqSwVb927DmDu2L3I2yQEGB9utwh_aUEiqVrRWVM1YB1RL/exec";
+        // BOT BLOCKER: URL split into pieces to hide from automated GitHub scrapers
+        const partA = "https://script.google.com/macros";
+        const partB = "/s/AKfycbxRXm8gopGYWYy2C-pJMnhqSwVb927DmDu2L3I2yQEGB9utwh_aUEiqVrRWVM1YB1RL";
+        const partC = "/exec";
+        const GOOGLE_SCRIPT_URL = partA + partB + partC;
 
         // --- Item block management ---
 
