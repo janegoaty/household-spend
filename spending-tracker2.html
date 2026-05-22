@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="apple-touch-icon" href="https://fav.farm/💰">
+    <title>Household Spending</title>
+    <style>
+        :root {
+            --primary-dark: #313d4b;
+            --bg-color: #f4f2ee;
+            --text-muted: #8b8f8e;
+            --border-color: #dcdad5;
+        }
+        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-color); display: flex; flex-direction: column; align-items: center; }
+        .header { background-color: var(--primary-dark); color: white; width: 100%; padding: 40px 20px 80px 20px; text-align: center; box-sizing: border-box; }
+        .header h1 { font-family: Georgia, serif; margin: 0 0 10px 0; font-size: 28px; letter-spacing: 0.5px; }
+        .header p { color: #aeb5be; margin: 0; font-size: 14px; }
+        .card { background: white; width: 90%; max-width: 400px; border-radius: 16px; padding: 30px 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-top: -50px; box-sizing: border-box; margin-bottom: 40px; }
+        .date-pill { background-color: #eef0f3; color: var(--primary-dark); padding: 6px 14px; border-radius: 20px; font-size: 14px; font-weight: 600; display: inline-block; margin-bottom: 25px; }
+        .form-group { margin-bottom: 14px; }
+        .form-group:last-child { margin-bottom: 0; }
+        label { display: block; color: var(--text-muted); font-size: 12px; font-weight: 600; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; }
+        input[type="text"], input[type="number"], input[type="password"] { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 12px; font-size: 16px; box-sizing: border-box; outline: none; background-color: #faf9f7; }
+        input:focus { border-color: var(--primary-dark); }
+        .toggle-group { display: flex; gap: 10px; }
+        .toggle-btn { flex: 1; padding: 14px; border: 1px solid var(--border-color); border-radius: 12px; background-color: transparent; color: var(--text-muted); font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .toggle-btn.active { background-color: #eef0f3; color: var(--primary-dark); border-color: var(--primary-dark); }
+        .submit-btn { width: 100%; background-color: var(--primary-dark); color: white; padding: 16px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: opacity 0.2s; }
+        .submit-btn:active { opacity: 0.8; }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .amount-wrapper { position: relative; }
+        .amount-wrapper::before { content: "$"; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 16px; }
+        .amount-wrapper input { padding-left: 30px; }
+
+        /* Item blocks */
+        .item-block { border: 1px solid var(--border-color); border-radius: 14px; padding: 16px; margin-bottom: 10px; background: #faf9f7; }
+        .item-block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .item-number { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.2px; }
+        .remove-btn { background: none; border: none; color: #bbb; cursor: pointer; font-size: 20px; padding: 0; line-height: 1; transition: color 0.2s; }
+        .remove-btn:hover { color: #c0392b; }
+
+        /* Add item button */
+        .add-item-btn { width: 100%; background: transparent; border: 1.5px dashed var(--border-color); border-radius: 12px; padding: 12px; color: var(--text-muted); font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 4px; transition: all 0.2s; box-sizing: border-box; }
+        .add-item-btn:hover { border-color: var(--primary-dark); color: var(--primary-dark); }
+
+        /* Divider */
+        .divider { border: none; border-top: 1px solid var(--border-color); margin: 20px 0; }
+
+        /* Section label above divider groups */
+        .section-label { color: var(--text-muted); font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; display: block; }
+
+        /* Status message (replaces alert) */
+        .status-msg { padding: 14px 16px; border-radius: 12px; font-size: 15px; font-weight: 600; text-align: center; margin-top: 12px; display: none; }
+        .status-msg.success { background: #e8f5e9; color: #2e7d32; }
+        .status-msg.error { background: #fdecea; color: #c62828; }
+        .status-msg.warning { background: #fff8e1; color: #e65100; }
+
+        /* Confirmation Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: flex-end; justify-content: center; z-index: 100; padding: 20px; box-sizing: border-box; }
+        @media (min-height: 500px) { .modal-overlay { align-items: center; } }
+        .modal { background: white; border-radius: 20px; padding: 24px 20px; width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+        .modal-title { font-family: Georgia, serif; margin: 0 0 4px 0; color: var(--primary-dark); font-size: 20px; }
+        .modal-subtitle { color: var(--text-muted); font-size: 13px; margin: 0 0 18px 0; }
+        .confirm-items-list { border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+        .confirm-item-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 14px; border-bottom: 1px solid var(--border-color); gap: 10px; }
+        .confirm-item-row:last-child { border-bottom: none; }
+        .confirm-item-left { flex: 1; }
+        .confirm-item-desc { font-size: 15px; font-weight: 600; color: var(--primary-dark); }
+        .confirm-item-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .confirm-item-amount { font-size: 16px; font-weight: 700; color: var(--primary-dark); white-space: nowrap; }
+        .confirm-total-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: #eef0f3; border-radius: 10px; margin-bottom: 18px; }
+        .confirm-total-label { font-size: 13px; font-weight: 700; color: var(--primary-dark); text-transform: uppercase; letter-spacing: 0.5px; }
+        .confirm-total-amount { font-size: 18px; font-weight: 700; color: var(--primary-dark); }
+        .confirm-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 18px; }
+        .modal-buttons { display: flex; gap: 10px; }
+        .modal-btn-primary { flex: 2; background-color: var(--primary-dark); color: white; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+        .modal-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .modal-btn-secondary { flex: 1; background: transparent; color: var(--text-muted); padding: 15px; border: 1px solid var(--border-color); border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal-overlay" style="display:none">
+        <div class="modal">
+            <h3 class="modal-title">Confirm Spending</h3>
+            <p class="modal-subtitle">Please check the details before logging.</p>
+            <div class="confirm-items-list" id="confirmItemsList"></div>
+            <div class="confirm-total-row">
+                <span class="confirm-total-label">Total</span>
+                <span class="confirm-total-amount" id="confirmTotal"></span>
+            </div>
+            <p class="confirm-meta" id="confirmMeta"></p>
+            <div class="modal-buttons">
+                <button class="modal-btn-secondary" id="confirmBack">Edit</button>
+                <button class="modal-btn-primary" id="confirmSubmit">Confirm & Log</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="header">
+        <h1>Household Spending</h1>
+        <p id="headerDate">Loading date...</p>
+    </div>
+
+    <div class="card">
+        <div class="date-pill" id="pillDate">Loading date...</div>
+
+        <form id="spendingForm">
+
+            <!-- Dynamic item blocks -->
+            <div id="itemsContainer"></div>
+
+            <!-- Add item button -->
+            <button type="button" class="add-item-btn" id="addItemBtn">+ Add Another Item</button>
+
+            <hr class="divider">
+
+            <div class="form-group">
+                <label>Entered By</label>
+                <div class="toggle-group" id="toggleGroup">
+                    <button type="button" class="toggle-btn active" onclick="setEnteredBy('SM', this)">SM</button>
+                    <button type="button" class="toggle-btn" onclick="setEnteredBy('MA', this)">MA</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Security PIN</label>
+                <input type="password" id="pin" inputmode="numeric" maxlength="6" placeholder="••••••" required>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">Review & Log →</button>
+            <div class="status-msg" id="statusMsg"></div>
+        </form>
+    </div>
+
+    <script>
+        const today = new Date();
+        document.getElementById('headerDate').textContent = today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        document.getElementById('pillDate').textContent = today.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+        let selectedUser = 'SM';
+        const currentMonth = today.toLocaleString('default', { month: 'long' }) + today.getFullYear();
+        const currentDate = today.toISOString().split('T')[0];
+
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxRXm8gopGYWYy2C-pJMnhqSwVb927DmDu2L3I2yQEGB9utwh_aUEiqVrRWVM1YB1RL/exec";
+
+        // --- Item block management ---
+
+        let itemCount = 0;
+
+        function createItemBlock() {
+            itemCount++;
+            const index = itemCount;
+            const block = document.createElement('div');
+            block.className = 'item-block';
+            block.dataset.index = index;
+            block.innerHTML = `
+                <div class="item-block-header">
+                    <span class="item-number">Item ${index}</span>
+                    <button type="button" class="remove-btn" onclick="removeItem(this)" title="Remove item">×</button>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" class="item-desc" required>
+                </div>
+                <div class="form-group">
+                    <label>Amount (SGD)</label>
+                    <div class="amount-wrapper">
+                        <input type="number" class="item-amount" step="0.01" min="0" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Payment Method</label>
+                    <input type="text" class="item-card">
+                </div>
+            `;
+            return block;
+        }
+
+        function addItem() {
+            const container = document.getElementById('itemsContainer');
+            container.appendChild(createItemBlock());
+            updateRemoveButtons();
+        }
+
+        function removeItem(btn) {
+            const block = btn.closest('.item-block');
+            block.remove();
+            renumberItems();
+            updateRemoveButtons();
+        }
+
+        function renumberItems() {
+            document.querySelectorAll('.item-block').forEach((block, i) => {
+                block.querySelector('.item-number').textContent = `Item ${i + 1}`;
+            });
+        }
+
+        function updateRemoveButtons() {
+            const blocks = document.querySelectorAll('.item-block');
+            blocks.forEach(block => {
+                const btn = block.querySelector('.remove-btn');
+                btn.style.display = blocks.length > 1 ? 'block' : 'none';
+            });
+        }
+
+        // Initialise with one item
+        addItem();
+
+        document.getElementById('addItemBtn').addEventListener('click', addItem);
+
+        // --- Entered By ---
+
+        function setEnteredBy(user, btnElement) {
+            selectedUser = user;
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+        }
+
+        // --- Status message helper ---
+
+        function showStatus(type, message) {
+            const el = document.getElementById('statusMsg');
+            el.className = 'status-msg ' + type;
+            el.textContent = message;
+            el.style.display = 'block';
+        }
+
+        function hideStatus() {
+            const el = document.getElementById('statusMsg');
+            el.style.display = 'none';
+        }
+
+        // --- Form reset ---
+
+        function resetForm() {
+            // Clear all item blocks and start fresh
+            document.getElementById('itemsContainer').innerHTML = '';
+            itemCount = 0;
+            addItem();
+            updateRemoveButtons();
+
+            // Reset PIN
+            document.getElementById('pin').value = '';
+
+            // Reset entered by
+            selectedUser = 'SM';
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.toggle-btn').classList.add('active');
+
+        }
+
+        // --- Collect items from form ---
+
+        function collectItems() {
+            const blocks = document.querySelectorAll('.item-block');
+            const items = [];
+            let valid = true;
+
+            blocks.forEach(block => {
+                const desc = block.querySelector('.item-desc').value.trim();
+                const amount = parseFloat(block.querySelector('.item-amount').value);
+                const card = block.querySelector('.item-card').value.trim() || 'N/A';
+
+                if (!desc || isNaN(amount) || amount <= 0) {
+                    valid = false;
+                }
+
+                items.push({ description: desc, amount: amount, card: card });
+            });
+
+            return valid ? items : null;
+        }
+
+        // --- Show confirmation modal ---
+
+        function showConfirmModal(items) {
+            const list = document.getElementById('confirmItemsList');
+            list.innerHTML = '';
+
+            let total = 0;
+            items.forEach(item => {
+                total += item.amount;
+                const row = document.createElement('div');
+                row.className = 'confirm-item-row';
+                const cardText = item.card !== 'N/A' ? ` · ${item.card}` : '';
+                row.innerHTML = `
+                    <div class="confirm-item-left">
+                        <div class="confirm-item-desc">${escapeHtml(item.description)}</div>
+                        <div class="confirm-item-meta">${escapeHtml(item.card) !== 'N/A' ? escapeHtml(item.card) : 'No payment method'}</div>
+                    </div>
+                    <div class="confirm-item-amount">$${item.amount.toFixed(2)}</div>
+                `;
+                list.appendChild(row);
+            });
+
+            document.getElementById('confirmTotal').textContent = `$${total.toFixed(2)}`;
+            document.getElementById('confirmMeta').textContent =
+                `${today.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} · Logged by ${selectedUser}`;
+
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // Close modal (go back to edit)
+        document.getElementById('confirmBack').addEventListener('click', () => {
+            document.getElementById('confirmModal').style.display = 'none';
+        });
+
+        // --- Form submit — show modal ---
+
+        document.getElementById('spendingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            hideStatus();
+
+            const items = collectItems();
+            if (!items) {
+                showStatus('error', 'Please fill in a description and valid amount for every item.');
+                return;
+            }
+
+            showConfirmModal(items);
+        });
+
+        // --- Confirmed — send to GAS ---
+
+        document.getElementById('confirmSubmit').addEventListener('click', function() {
+            const items = collectItems();
+            if (!items) return;
+
+            const confirmBtn = document.getElementById('confirmSubmit');
+            confirmBtn.textContent = 'Logging...';
+            confirmBtn.disabled = true;
+
+            const payload = {
+                pin: document.getElementById('pin').value,
+                month: currentMonth,
+                date: currentDate,
+                enteredBy: selectedUser,
+                items: items
+            };
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.text())
+            .then(data => {
+                confirmBtn.textContent = 'Confirm & Log';
+                confirmBtn.disabled = false;
+                document.getElementById('confirmModal').style.display = 'none';
+
+                if (data === "OK") {
+                    resetForm();
+                    showStatus('success', items.length === 1
+                        ? '✓ Your item was logged successfully.'
+                        : `✓ All ${items.length} items were logged successfully.`);
+                    setTimeout(hideStatus, 4000);
+                } else if (data === "Unauthorized") {
+                    showStatus('error', 'Incorrect PIN. Please try again.');
+                } else if (data.startsWith("Locked")) {
+                    // Parse just the time from the server message, avoid showing raw text
+                    const minuteMatch = data.match(/(\d+)\s*minute/);
+                    if (minuteMatch) {
+                        showStatus('warning', `Too many incorrect PINs. Please try again in ${minuteMatch[1]} minute${minuteMatch[1] === '1' ? '' : 's'}.`);
+                    } else {
+                        showStatus('warning', 'Too many incorrect PINs. Please wait before trying again.');
+                    }
+                } else {
+                    showStatus('error', 'Something went wrong. Please try again.');
+                    console.error("Unexpected server response:", data);
+                }
+            })
+            .catch(error => {
+                confirmBtn.textContent = 'Confirm & Log';
+                confirmBtn.disabled = false;
+                document.getElementById('confirmModal').style.display = 'none';
+                showStatus('error', 'Could not reach the server. Please check your connection.');
+                console.error("Fetch error:", error);
+            });
+        });
+    </script>
+</body>
+</html>
